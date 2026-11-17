@@ -3,11 +3,47 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:wallet_unsaac/core/theme/theme_cubit.dart';
 import 'package:wallet_unsaac/core/theme/theme_preferences.dart';
+import 'package:wallet_unsaac/core/theme/app_theme.dart';
+import 'package:wallet_unsaac/core/theme/theme_state.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   setUp(() => SharedPreferences.setMockInitialValues({}));
+
+  test('el color participa en la igualdad y conserva el modo', () async {
+    final cubit = ThemeCubit(
+      preferences: ThemePreferences(await SharedPreferences.getInstance()),
+      initialMode: ThemeMode.dark,
+    );
+    expect(cubit.state.seedColor, AppTheme.seed);
+    cubit.setSeedColor(Colors.blue);
+    expect(cubit.state.mode, ThemeMode.dark);
+    expect(cubit.state.seedColor, Colors.blue);
+    expect(cubit.state, isNot(const ThemeState(mode: ThemeMode.dark)));
+    await cubit.setMode(ThemeMode.light);
+    expect(cubit.state.seedColor, Colors.blue);
+    await cubit.close();
+  });
+
+  test('la paleta deriva del color semilla en ambos modos', () {
+    for (final brightness in Brightness.values) {
+      final theme = brightness == Brightness.light
+          ? AppTheme.light(Colors.blue)
+          : AppTheme.dark(Colors.blue);
+      expect(
+        theme.colorScheme.primary,
+        ColorScheme.fromSeed(
+          seedColor: Colors.blue,
+          brightness: brightness,
+        ).primary,
+      );
+      final original = brightness == Brightness.light
+          ? AppTheme.light()
+          : AppTheme.dark();
+      expect(theme.colorScheme.primary, isNot(original.colorScheme.primary));
+    }
+  });
 
   test('guarda y recupera cada modo', () async {
     final preferences = ThemePreferences(await SharedPreferences.getInstance());

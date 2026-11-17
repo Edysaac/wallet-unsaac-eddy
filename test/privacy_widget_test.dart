@@ -10,6 +10,7 @@ import 'package:wallet_unsaac/features/wallet/domain/entities/wallet_summary.dar
 import 'package:wallet_unsaac/features/wallet/domain/repositories/wallet_repository.dart';
 import 'package:wallet_unsaac/features/wallet/presentation/cubit/privacy_cubit.dart';
 import 'package:wallet_unsaac/features/wallet/presentation/cubit/balance_cubit.dart';
+import 'package:wallet_unsaac/features/wallet/presentation/widgets/seed_color_selector.dart';
 import 'package:wallet_unsaac/features/wallet/presentation/pages/wallet_home_page.dart';
 
 class CountingRepository implements WalletRepository {
@@ -61,6 +62,46 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('S/ 1,274.60'), findsOneWidget);
     expect(find.text('+ S/ 1,200.00'), findsOneWidget);
+    expect(repository.calls, 1);
+  });
+
+  testWidgets('seleccionar color conserva el modo y el resumen', (
+    tester,
+  ) async {
+    SharedPreferences.setMockInitialValues({});
+    final prefs = ThemePreferences(await SharedPreferences.getInstance());
+    final repository = CountingRepository();
+    await tester.pumpWidget(
+      MultiBlocProvider(
+        providers: [
+          BlocProvider(
+            create: (_) =>
+                ThemeCubit(preferences: prefs, initialMode: ThemeMode.dark),
+          ),
+          BlocProvider(create: (_) => PrivacyCubit()),
+          BlocProvider(create: (_) => BalanceCubit(repository)..load()),
+        ],
+        child: const MaterialApp(
+          home: WalletHomePage(firebaseStatus: FirebaseStatus.notConfigured()),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.byTooltip('Elegir color'));
+    await tester.pumpAndSettle();
+    expect(find.byType(SeedColorSelector), findsOneWidget);
+    await tester.tap(find.byTooltip('Azul'));
+    await tester.pumpAndSettle();
+    final context = tester.element(find.byType(SeedColorSelector));
+    expect(context.read<ThemeCubit>().state.mode, ThemeMode.dark);
+    expect(
+      context.read<ThemeCubit>().state.seedColor,
+      SeedColorSelector.colors[1].$2,
+    );
+    expect(find.byIcon(Icons.check), findsOneWidget);
+    await tester.tap(find.text('Cerrar'));
+    await tester.pumpAndSettle();
+    expect(find.text('S/ 1,274.60'), findsOneWidget);
     expect(repository.calls, 1);
   });
 }

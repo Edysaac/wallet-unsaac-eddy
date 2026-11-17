@@ -25,4 +25,6 @@ class ThemeCubit extends Cubit<ThemeState> {
   }
 
   Future<void> useSystemMode() => setMode(ThemeMode.system);
+
+  void setSeedColor(Color color) => emit(state.copyWith(seedColor: color));
 }

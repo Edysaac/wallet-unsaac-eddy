@@ -9,13 +9,15 @@ import 'package:flutter/material.dart';
 abstract final class AppTheme {
   static const Color seed = Color(0xFF7A1F2B);
 
-  static ThemeData light() => _build(Brightness.light);
+  static ThemeData light([Color seedColor = seed]) =>
+      _build(Brightness.light, seedColor);
 
-  static ThemeData dark() => _build(Brightness.dark);
+  static ThemeData dark([Color seedColor = seed]) =>
+      _build(Brightness.dark, seedColor);
 
-  static ThemeData _build(Brightness brightness) {
+  static ThemeData _build(Brightness brightness, Color seedColor) {
     final scheme = ColorScheme.fromSeed(
-      seedColor: seed,
+      seedColor: seedColor,
       brightness: brightness,
     );
 
@@ -34,9 +36,7 @@ abstract final class AppTheme {
         elevation: 0,
         margin: EdgeInsets.zero,
         color: scheme.surfaceContainerLow,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       ),
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(

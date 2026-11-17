@@ -9,6 +9,7 @@ import 'package:wallet_unsaac/features/wallet/presentation/cubit/privacy_cubit.d
 import 'package:wallet_unsaac/features/wallet/presentation/cubit/privacy_state.dart';
 import 'package:wallet_unsaac/features/wallet/presentation/cubit/balance_cubit.dart';
 import 'package:wallet_unsaac/features/wallet/presentation/cubit/balance_state.dart';
+import 'package:wallet_unsaac/features/wallet/presentation/widgets/seed_color_selector.dart';
 
 /// Pantalla principal de Wallet UNSAAC (Sesión 1).
 ///
@@ -53,6 +54,14 @@ class WalletHomePage extends StatelessWidget {
           ],
         ),
         actions: [
+          IconButton(
+            tooltip: 'Elegir color',
+            icon: const Icon(Icons.palette_outlined),
+            onPressed: () => showDialog<void>(
+              context: context,
+              builder: (_) => const SeedColorSelector(),
+            ),
+          ),
           IconButton(
             tooltip: switch (mode) {
               ThemeMode.light => 'Tema actual: claro',
