@@ -4,9 +4,14 @@ import 'package:wallet_unsaac/features/wallet/domain/entities/movement.dart';
 
 /// Fila de un movimiento financiero.
 class MovementTile extends StatelessWidget {
-  const MovementTile({super.key, required this.movement});
+  const MovementTile({
+    super.key,
+    required this.movement,
+    required this.hideAmount,
+  });
 
   final Movement movement;
+  final bool hideAmount;
 
   static const Color _incomeLight = Color(0xFF2E7D32);
   static const Color _incomeDark = Color(0xFF81C784);
@@ -44,7 +49,9 @@ class MovementTile extends StatelessWidget {
           overflow: TextOverflow.ellipsis,
         ),
         trailing: Text(
-          '${movement.isIncome ? '+' : '-'} ${MoneyFormat.soles(movement.amount)}',
+          hideAmount
+              ? '••••••'
+              : '${movement.isIncome ? '+' : '-'} ${MoneyFormat.soles(movement.amount)}',
           style: TextStyle(color: accent, fontWeight: FontWeight.w600),
         ),
       ),

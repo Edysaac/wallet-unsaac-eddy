@@ -8,6 +8,7 @@ import 'package:wallet_unsaac/core/theme/theme_state.dart';
 import 'package:wallet_unsaac/features/wallet/data/repositories/in_memory_wallet_repository.dart';
 import 'package:wallet_unsaac/features/wallet/domain/repositories/wallet_repository.dart';
 import 'package:wallet_unsaac/features/wallet/presentation/pages/wallet_home_page.dart';
+import 'package:wallet_unsaac/features/wallet/presentation/cubit/privacy_cubit.dart';
 
 /// Raíz de la aplicación.
 ///
@@ -50,7 +51,10 @@ class WalletApp extends StatelessWidget {
               theme: AppTheme.light(),
               darkTheme: AppTheme.dark(),
               themeMode: themeState.mode,
-              home: WalletHomePage(firebaseStatus: firebaseStatus),
+              home: BlocProvider(
+                create: (_) => PrivacyCubit(),
+                child: WalletHomePage(firebaseStatus: firebaseStatus),
+              ),
             );
           },
         ),

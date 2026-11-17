@@ -4,9 +4,16 @@ import 'package:wallet_unsaac/features/wallet/domain/entities/wallet_summary.dar
 
 /// Tarjeta principal con el saldo y los totales del mes.
 class BalanceCard extends StatelessWidget {
-  const BalanceCard({super.key, required this.summary});
+  const BalanceCard({
+    super.key,
+    required this.summary,
+    required this.hideBalance,
+    required this.onTogglePrivacy,
+  });
 
   final WalletSummary summary;
+  final bool hideBalance;
+  final VoidCallback onTogglePrivacy;
 
   @override
   Widget build(BuildContext context) {
@@ -50,6 +57,17 @@ class BalanceCard extends StatelessWidget {
                   letterSpacing: 0.2,
                 ),
               ),
+              const Spacer(),
+              IconButton(
+                tooltip: hideBalance ? 'Mostrar saldo' : 'Ocultar saldo',
+                onPressed: onTogglePrivacy,
+                color: scheme.onPrimary,
+                icon: Icon(
+                  hideBalance
+                      ? Icons.visibility_off_outlined
+                      : Icons.visibility_outlined,
+                ),
+              ),
             ],
           ),
           const SizedBox(height: 12),
@@ -57,7 +75,7 @@ class BalanceCard extends StatelessWidget {
             fit: BoxFit.scaleDown,
             alignment: Alignment.centerLeft,
             child: Text(
-              MoneyFormat.soles(summary.balance),
+              hideBalance ? '••••••' : MoneyFormat.soles(summary.balance),
               style: TextStyle(
                 color: scheme.onPrimary,
                 fontSize: 36,
@@ -75,7 +93,9 @@ class BalanceCard extends StatelessWidget {
                 child: _BalanceMetric(
                   icon: Icons.south_west_rounded,
                   label: 'Ingresos',
-                  value: MoneyFormat.soles(summary.income),
+                  value: hideBalance
+                      ? '••••••'
+                      : MoneyFormat.soles(summary.income),
                   color: scheme.onPrimary,
                   mutedColor: onPrimaryMuted,
                 ),
@@ -90,7 +110,9 @@ class BalanceCard extends StatelessWidget {
                 child: _BalanceMetric(
                   icon: Icons.north_east_rounded,
                   label: 'Egresos',
-                  value: MoneyFormat.soles(summary.expenses),
+                  value: hideBalance
+                      ? '••••••'
+                      : MoneyFormat.soles(summary.expenses),
                   color: scheme.onPrimary,
                   mutedColor: onPrimaryMuted,
                 ),
@@ -128,10 +150,7 @@ class _BalanceMetric extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                label,
-                style: TextStyle(color: mutedColor, fontSize: 12),
-              ),
+              Text(label, style: TextStyle(color: mutedColor, fontSize: 12)),
               const SizedBox(height: 2),
               FittedBox(
                 fit: BoxFit.scaleDown,
