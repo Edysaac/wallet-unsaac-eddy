@@ -9,6 +9,7 @@ import 'package:wallet_unsaac/features/wallet/data/repositories/in_memory_wallet
 import 'package:wallet_unsaac/features/wallet/domain/entities/wallet_summary.dart';
 import 'package:wallet_unsaac/features/wallet/domain/repositories/wallet_repository.dart';
 import 'package:wallet_unsaac/features/wallet/presentation/cubit/privacy_cubit.dart';
+import 'package:wallet_unsaac/features/wallet/presentation/cubit/balance_cubit.dart';
 import 'package:wallet_unsaac/features/wallet/presentation/pages/wallet_home_page.dart';
 
 class CountingRepository implements WalletRepository {
@@ -34,6 +35,7 @@ void main() {
           providers: [
             BlocProvider(create: (_) => ThemeCubit(preferences: prefs)),
             BlocProvider(create: (_) => PrivacyCubit()),
+            BlocProvider(create: (_) => BalanceCubit(repository)..load()),
           ],
           child: const MaterialApp(
             home: WalletHomePage(

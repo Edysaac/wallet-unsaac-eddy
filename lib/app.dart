@@ -7,8 +7,27 @@ import 'package:wallet_unsaac/core/theme/theme_preferences.dart';
 import 'package:wallet_unsaac/core/theme/theme_state.dart';
 import 'package:wallet_unsaac/features/wallet/data/repositories/in_memory_wallet_repository.dart';
 import 'package:wallet_unsaac/features/wallet/domain/repositories/wallet_repository.dart';
+import 'package:wallet_unsaac/features/wallet/domain/entities/wallet_summary.dart';
 import 'package:wallet_unsaac/features/wallet/presentation/pages/wallet_home_page.dart';
 import 'package:wallet_unsaac/features/wallet/presentation/cubit/privacy_cubit.dart';
+import 'package:wallet_unsaac/features/wallet/presentation/cubit/balance_cubit.dart';
+
+// Activado únicamente con --dart-define=SIMULAR_ERROR=true para la demostración.
+const _simularError = bool.fromEnvironment('SIMULAR_ERROR');
+
+class _FailOnceRepository implements WalletRepository {
+  final WalletRepository _delegate = InMemoryWalletRepository();
+  bool _failed = false;
+
+  @override
+  Future<WalletSummary> loadSummary() async {
+    if (!_failed) {
+      _failed = true;
+      throw Exception('Error simulado');
+    }
+    return _delegate.loadSummary();
+  }
+}
 
 /// Raíz de la aplicación.
 ///
@@ -37,7 +56,9 @@ class WalletApp extends StatelessWidget {
     return MultiRepositoryProvider(
       providers: [
         RepositoryProvider<WalletRepository>(
-          create: (_) => InMemoryWalletRepository(),
+          create: (_) => _simularError
+              ? _FailOnceRepository()
+              : InMemoryWalletRepository(),
         ),
       ],
       child: BlocProvider(
@@ -51,8 +72,14 @@ class WalletApp extends StatelessWidget {
               theme: AppTheme.light(),
               darkTheme: AppTheme.dark(),
               themeMode: themeState.mode,
-              home: BlocProvider(
-                create: (_) => PrivacyCubit(),
+              home: MultiBlocProvider(
+                providers: [
+                  BlocProvider(create: (_) => PrivacyCubit()),
+                  BlocProvider(
+                    create: (context) =>
+                        BalanceCubit(context.read<WalletRepository>())..load(),
+                  ),
+                ],
                 child: WalletHomePage(firebaseStatus: firebaseStatus),
               ),
             );

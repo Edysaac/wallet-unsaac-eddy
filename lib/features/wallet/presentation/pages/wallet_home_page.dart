@@ -2,49 +2,25 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:wallet_unsaac/core/config/firebase_status.dart';
 import 'package:wallet_unsaac/core/theme/theme_cubit.dart';
-import 'package:wallet_unsaac/features/wallet/domain/entities/wallet_summary.dart';
-import 'package:wallet_unsaac/features/wallet/domain/repositories/wallet_repository.dart';
 import 'package:wallet_unsaac/features/wallet/presentation/widgets/balance_card.dart';
 import 'package:wallet_unsaac/features/wallet/presentation/widgets/firebase_status_card.dart';
 import 'package:wallet_unsaac/features/wallet/presentation/widgets/movement_tile.dart';
 import 'package:wallet_unsaac/features/wallet/presentation/cubit/privacy_cubit.dart';
 import 'package:wallet_unsaac/features/wallet/presentation/cubit/privacy_state.dart';
+import 'package:wallet_unsaac/features/wallet/presentation/cubit/balance_cubit.dart';
+import 'package:wallet_unsaac/features/wallet/presentation/cubit/balance_state.dart';
 
 /// Pantalla principal de Wallet UNSAAC (Sesión 1).
 ///
 /// Muestra el resumen que entrega el repositorio y permite alternar el tema.
 /// El cambio de tema lo resuelve `ThemeCubit`; la pantalla solo envía la
 /// intención del usuario y se reconstruye cuando el estado cambia.
-class WalletHomePage extends StatefulWidget {
+class WalletHomePage extends StatelessWidget {
   const WalletHomePage({super.key, required this.firebaseStatus});
 
   final FirebaseStatus firebaseStatus;
 
-  @override
-  State<WalletHomePage> createState() => _WalletHomePageState();
-}
-
-class _WalletHomePageState extends State<WalletHomePage> {
-  late Future<WalletSummary> _summaryFuture;
-
-  @override
-  void initState() {
-    super.initState();
-    _summaryFuture = context.read<WalletRepository>().loadSummary();
-  }
-
-  Future<void> _reload() async {
-    final future = context.read<WalletRepository>().loadSummary();
-    setState(() => _summaryFuture = future);
-    try {
-      await future;
-    } on Exception {
-      // El estado de error se representa en la interfaz; aquí solo se evita
-      // que el RefreshIndicator propague la excepción.
-    }
-  }
-
-  void _showComingSoon(String feature) {
+  void _showComingSoon(BuildContext context, String feature) {
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
       ..showSnackBar(
@@ -93,24 +69,24 @@ class _WalletHomePageState extends State<WalletHomePage> {
           const SizedBox(width: 8),
         ],
       ),
-      body: FutureBuilder<WalletSummary>(
-        future: _summaryFuture,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
+      body: BlocBuilder<BalanceCubit, BalanceState>(
+        builder: (context, state) {
+          if (state is BalanceInitial || state is BalanceLoading) {
             return const Center(child: CircularProgressIndicator());
           }
-          if (snapshot.hasError) {
+          if (state is BalanceFailure) {
             return _ErrorView(
-              message: 'No se pudo cargar el resumen de la billetera.',
-              onRetry: _reload,
+              message: state.message,
+              onRetry: context.read<BalanceCubit>().load,
             );
           }
 
-          final summary = snapshot.data!;
+          final summary = (state as BalanceSuccess).summary;
           return BlocBuilder<PrivacyCubit, PrivacyState>(
             builder: (context, privacy) => RefreshIndicator(
-              onRefresh: _reload,
+              onRefresh: context.read<BalanceCubit>().load,
               child: ListView(
+                physics: const AlwaysScrollableScrollPhysics(),
                 padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
                 children: [
                   Text(
@@ -135,7 +111,8 @@ class _WalletHomePageState extends State<WalletHomePage> {
                     children: [
                       Expanded(
                         child: FilledButton.tonalIcon(
-                          onPressed: () => _showComingSoon('Registrar ingreso'),
+                          onPressed: () =>
+                              _showComingSoon(context, 'Registrar ingreso'),
                           icon: const Icon(Icons.add_rounded),
                           label: const Text('Ingreso'),
                         ),
@@ -143,7 +120,8 @@ class _WalletHomePageState extends State<WalletHomePage> {
                       const SizedBox(width: 12),
                       Expanded(
                         child: OutlinedButton.icon(
-                          onPressed: () => _showComingSoon('Registrar egreso'),
+                          onPressed: () =>
+                              _showComingSoon(context, 'Registrar egreso'),
                           icon: const Icon(Icons.remove_rounded),
                           label: const Text('Egreso'),
                         ),
@@ -163,7 +141,7 @@ class _WalletHomePageState extends State<WalletHomePage> {
                       ),
                       TextButton(
                         onPressed: () =>
-                            _showComingSoon('El historial completo'),
+                            _showComingSoon(context, 'El historial completo'),
                         child: const Text('Ver todos'),
                       ),
                     ],
@@ -180,7 +158,7 @@ class _WalletHomePageState extends State<WalletHomePage> {
                       const SizedBox(height: 10),
                     ],
                   const SizedBox(height: 12),
-                  FirebaseStatusCard(status: widget.firebaseStatus),
+                  FirebaseStatusCard(status: firebaseStatus),
                   const SizedBox(height: 16),
                   Center(
                     child: Text(
