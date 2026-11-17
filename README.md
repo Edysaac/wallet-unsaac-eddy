@@ -1,4 +1,4 @@
-# Wallet UNSAAC — proyecto base de la Sesión 1
+# Wallet UNSAAC — retos de la Sesión 1
 
 Aplicativo de finanzas personales del curso **Desarrollo de Software II
 (IF616AIN)** de la Escuela Profesional de Ingeniería Informática y de Sistemas
@@ -6,7 +6,7 @@ de la UNSAAC.
 
 Esta es la versión de la **Sesión 1 (lunes 9 de noviembre de 2026)**: arquitectura
 por capas, patrón BLoC con `ThemeCubit`, Material 3 y conexión preparada para
-Firebase. Los datos son de demostración y viven en memoria; la autenticación y
+Firebase, además de los cuatro retos de la guía. Los datos son de demostración y viven en memoria; la autenticación y
 Firestore se incorporan en las sesiones 3 y 5.
 
 ## Estado verificado
@@ -15,7 +15,7 @@ Firestore se incorporan en las sesiones 3 y 5.
 |---|---|
 | `flutter --version` | Flutter 3.44.9 · Dart 3.12.2 (canal estable) |
 | `flutter analyze` | Sin observaciones |
-| `flutter test` | 13 pruebas aprobadas |
+| `flutter test` | 21 pruebas aprobadas |
 | Plataforma | Android (`applicationId` `pe.edu.unsaac.wallet_unsaac`) |
 
 > El proyecto no incluye credenciales reales de Firebase. Mientras
@@ -41,8 +41,28 @@ flutter test
 flutter run
 ```
 
-La app abre con datos de demostración: saldo `S/ 1,274.60`, siete movimientos y
-un botón en la barra superior para alternar tema claro/oscuro.
+La app abre con datos de demostración: saldo `S/ 1,274.60` y siete movimientos.
+
+### Retos implementados
+
+1. **Tema persistente:** el botón de tema recorre claro → oscuro → sistema. El
+   modo se guarda con `shared_preferences` y se carga antes de `runApp`.
+2. **Saldo privado:** el botón de ojo oculta o muestra el saldo y los importes.
+   La preferencia dura mientras la aplicación está abierta.
+3. **Estados del saldo:** `BalanceCubit` muestra carga, éxito o error. El botón
+   «Reintentar» y el gesto de actualizar vuelven a consultar el repositorio.
+4. **Color semilla:** el botón de paleta permite elegir granate, azul, verde o
+   violeta en los modos claro y oscuro. El color dura durante la sesión y vuelve
+   al granate al reiniciar la aplicación.
+
+Para mostrar el error del reto 3 y probar el reintento, ejecuta:
+
+```bash
+flutter run --dart-define=SIMULAR_ERROR=true
+```
+
+La primera carga falla de forma simulada. Pulsa **Reintentar** para cargar los
+datos de demostración. Para el inicio normal, ejecuta `flutter run` sin esa opción.
 
 ### Conectar Firebase (paso de la sesión)
 
@@ -78,6 +98,7 @@ lib/
 │   │   └── firebase_status.dart
 │   ├── theme/
 │   │   ├── app_theme.dart         # ColorScheme.fromSeed (claro/oscuro)
+│   │   ├── theme_preferences.dart # lectura y guardado del modo
 │   │   ├── theme_cubit.dart       # lógica del tema
 │   │   └── theme_state.dart       # estado inmutable con Equatable
 │   └── utils/
@@ -94,12 +115,16 @@ lib/
         │   └── repositories/
         │       └── in_memory_wallet_repository.dart
         └── presentation/
+            ├── cubit/
+            │   ├── balance_cubit.dart / balance_state.dart
+            │   └── privacy_cubit.dart / privacy_state.dart
             ├── pages/
             │   └── wallet_home_page.dart
             └── widgets/
                 ├── balance_card.dart
                 ├── firebase_status_card.dart
-                └── movement_tile.dart
+                ├── movement_tile.dart
+                └── seed_color_selector.dart
 ```
 
 La regla de dependencia es unidireccional:
@@ -159,7 +184,9 @@ un Bloc completo con eventos, para contrastar ambos enfoques.
 
 | Archivo | Qué verifica |
 |---|---|
-| `test/theme_cubit_test.dart` | Estado inicial, `toggle`, `setMode`, `useSystemMode`. |
+| `test/theme_cubit_test.dart` | Persistencia del modo, ciclo del tema y paleta. |
+| `test/privacy_cubit_test.dart` y `test/privacy_widget_test.dart` | Privacidad, selección de color y conservación del resumen. |
+| `test/balance_cubit_test.dart` y `test/balance_widget_test.dart` | Carga, éxito, fallo y reintento. |
 | `test/wallet_summary_test.dart` | Cálculo de ingresos, egresos y saldo en el dominio. |
 | `test/money_format_test.dart` | Formato `S/ 1,274.60` y fechas `dd/mm/aaaa`. |
 | `test/in_memory_wallet_repository_test.dart` | Totales de los datos de demostración. |
