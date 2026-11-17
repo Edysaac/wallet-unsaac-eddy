@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:wallet_unsaac/app.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:wallet_unsaac/core/theme/theme_preferences.dart';
 import 'package:wallet_unsaac/core/config/firebase_bootstrap.dart';
 
 /// Punto de entrada de Wallet UNSAAC.
@@ -14,5 +16,13 @@ import 'package:wallet_unsaac/core/config/firebase_bootstrap.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   final firebaseStatus = await FirebaseBootstrap.initialize();
-  runApp(WalletApp(firebaseStatus: firebaseStatus));
+  final preferences = ThemePreferences(await SharedPreferences.getInstance());
+  final initialMode = preferences.load();
+  runApp(
+    WalletApp(
+      firebaseStatus: firebaseStatus,
+      themePreferences: preferences,
+      initialMode: initialMode,
+    ),
+  );
 }

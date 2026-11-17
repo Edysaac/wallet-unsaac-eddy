@@ -56,7 +56,7 @@ class _WalletHomePageState extends State<WalletHomePage> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
+    final mode = context.watch<ThemeCubit>().state.mode;
 
     return Scaffold(
       appBar: AppBar(
@@ -76,10 +76,16 @@ class _WalletHomePageState extends State<WalletHomePage> {
         ),
         actions: [
           IconButton(
-            tooltip: isDark ? 'Activar tema claro' : 'Activar tema oscuro',
-            icon: Icon(
-              isDark ? Icons.light_mode_outlined : Icons.dark_mode_outlined,
-            ),
+            tooltip: switch (mode) {
+              ThemeMode.light => 'Tema actual: claro',
+              ThemeMode.dark => 'Tema actual: oscuro',
+              ThemeMode.system => 'Tema actual: sistema',
+            },
+            icon: Icon(switch (mode) {
+              ThemeMode.light => Icons.light_mode_outlined,
+              ThemeMode.dark => Icons.dark_mode_outlined,
+              ThemeMode.system => Icons.brightness_auto_outlined,
+            }),
             onPressed: () => context.read<ThemeCubit>().toggle(),
           ),
           const SizedBox(width: 8),

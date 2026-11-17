@@ -2,13 +2,21 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:wallet_unsaac/app.dart';
 import 'package:wallet_unsaac/core/config/firebase_status.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:wallet_unsaac/core/theme/theme_preferences.dart';
 
 void main() {
+  setUp(() => SharedPreferences.setMockInitialValues({}));
   testWidgets('la pantalla principal muestra el saldo de demostración', (
     tester,
   ) async {
     await tester.pumpWidget(
-      const WalletApp(firebaseStatus: FirebaseStatus.notConfigured()),
+      WalletApp(
+        firebaseStatus: const FirebaseStatus.notConfigured(),
+        themePreferences: ThemePreferences(
+          await SharedPreferences.getInstance(),
+        ),
+      ),
     );
     await tester.pumpAndSettle();
 
@@ -29,19 +37,23 @@ void main() {
     tester,
   ) async {
     await tester.pumpWidget(
-      const WalletApp(firebaseStatus: FirebaseStatus.notConfigured()),
+      WalletApp(
+        firebaseStatus: const FirebaseStatus.notConfigured(),
+        themePreferences: ThemePreferences(
+          await SharedPreferences.getInstance(),
+        ),
+      ),
     );
     await tester.pumpAndSettle();
 
-    MaterialApp app() =>
-        tester.widget<MaterialApp>(find.byType(MaterialApp));
+    MaterialApp app() => tester.widget<MaterialApp>(find.byType(MaterialApp));
 
     expect(app().themeMode, ThemeMode.system);
 
-    await tester.tap(find.byTooltip('Activar tema oscuro'));
+    await tester.tap(find.byTooltip('Tema actual: sistema'));
     await tester.pumpAndSettle();
 
-    expect(app().themeMode, ThemeMode.dark);
-    expect(find.byTooltip('Activar tema claro'), findsOneWidget);
+    expect(app().themeMode, ThemeMode.light);
+    expect(find.byTooltip('Tema actual: claro'), findsOneWidget);
   });
 }
