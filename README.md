@@ -5,24 +5,24 @@ Aplicativo de finanzas personales del curso **Desarrollo de Software II
 de la UNSAAC.
 
 Esta es la versión de la **Sesión 1 (lunes 9 de noviembre de 2026)**: arquitectura
-por capas, patrón BLoC con `ThemeCubit`, Material 3 y conexión preparada para
-Firebase, además de los cuatro retos de la guía. Los datos son de demostración y viven en memoria; la autenticación y
+por capas, patrón BLoC con `ThemeCubit`, Material 3 y conexión con Firebase para
+Android, además de los cuatro retos de la guía. Los datos son de demostración y viven en memoria; la autenticación y
 Firestore se incorporan en las sesiones 3 y 5.
 
 ## Estado verificado
 
 | Verificación | Resultado |
 |---|---|
-| `flutter --version` | Flutter 3.44.9 · Dart 3.12.2 (canal estable) |
+| `flutter --version` | Flutter 3.47.5 · Dart 3.13.4 (canal estable) |
 | `flutter analyze` | Sin observaciones |
 | `flutter test` | 21 pruebas aprobadas |
 | Plataforma | Android (`applicationId` `pe.edu.unsaac.wallet_unsaac`) |
 
-> El proyecto no incluye credenciales reales de Firebase. Mientras
-> `lib/firebase_options.dart` conserve los marcadores `REEMPLAZAR_...`, la app
-> arranca en **modo local** y muestra el estado «Firebase: no configurado».
-> Esto es intencional: permite trabajar la sesión sin depender de una cuenta de
-> Firebase y evita subir credenciales al repositorio.
+> Firebase se configuró para Android con el proyecto `wallet-unsaac-a72ed` y la
+> aplicación mostró «Firebase: conectado». Esto confirma la inicialización de
+> `firebase_core`; el saldo y los movimientos siguen siendo datos locales.
+> El archivo `android/app/google-services.json` está excluido de Git: consulta
+> las instrucciones de configuración antes de compilar una copia nueva.
 
 ## Requisitos
 
@@ -30,9 +30,12 @@ Firestore se incorporan en las sesiones 3 y 5.
 - Android Studio con SDK de Android y un emulador con Google Play, o un
   dispositivo físico con depuración USB.
 - Git.
-- Para conectar Firebase: una cuenta de Google y FlutterFire CLI.
+- Para configurar Firebase: una cuenta de Google, Firebase CLI y FlutterFire CLI.
 
 ## Puesta en marcha
+
+Configura Firebase según la sección siguiente antes de compilar Android por
+primera vez; después ejecuta:
 
 ```bash
 flutter pub get
@@ -66,20 +69,33 @@ datos de demostración. Para el inicio normal, ejecuta `flutter run` sin esa opc
 
 ### Conectar Firebase (paso de la sesión)
 
-1. Crear el proyecto en <https://console.firebase.google.com/>.
-2. Registrar una aplicación **Android** con el `applicationId`
-   `pe.edu.unsaac.wallet_unsaac`.
-3. Instalar y ejecutar FlutterFire CLI:
+La configuración actual corresponde al proyecto `wallet-unsaac-a72ed` y al
+paquete Android `pe.edu.unsaac.wallet_unsaac`. Para configurar una copia con tu
+propio proyecto:
+
+1. Crear o elegir un proyecto en <https://console.firebase.google.com/>.
+2. Instalar [Firebase CLI](https://firebase.google.com/docs/cli?hl=es) e iniciar
+   sesión con `firebase login`.
+3. Instalar FlutterFire CLI y ejecutar la configuración desde esta carpeta:
 
 ```bash
 dart pub global activate flutterfire_cli
-flutterfire configure
+flutterfire configure --platforms=android
 ```
 
-4. Seleccionar el proyecto, la plataforma `android` y confirmar. El comando
-   sobrescribe `lib/firebase_options.dart` con las credenciales reales.
-5. Volver a ejecutar `flutter run`. La tarjeta inferior debe mostrar
-   «Firebase: conectado».
+4. Seleccionar tu proyecto y aceptar la sustitución de `lib/firebase_options.dart`.
+   FlutterFire registra o reutiliza la aplicación Android y genera también
+   `android/app/google-services.json`.
+5. Ejecutar `flutter run` en Android. La tarjeta inferior debe mostrar
+   «Firebase: conectado». La inicialización no verifica lectura o escritura en
+   Firestore, que aún no se utiliza en esta sesión.
+
+En Windows, si `flutterfire` no se reconoce tras instalarlo, añade a la sesión
+actual de PowerShell la carpeta de ejecutables de Dart y repite el comando:
+
+```powershell
+$env:Path += ";$env:LOCALAPPDATA\Pub\Cache\bin"
+```
 
 El `applicationId` se cambia en `android/app/build.gradle.kts`. Si se modifica,
 hay que registrar de nuevo la app en Firebase Console y repetir
@@ -91,7 +107,7 @@ hay que registrar de nuevo la app en Firebase Console y repetir
 lib/
 ├── main.dart                      # ensureInitialized → Firebase → runApp
 ├── app.dart                       # providers, MaterialApp y tema
-├── firebase_options.dart          # plantilla que genera flutterfire configure
+├── firebase_options.dart          # configuración generada por FlutterFire
 ├── core/
 │   ├── config/
 │   │   ├── firebase_bootstrap.dart
@@ -176,7 +192,8 @@ un Bloc completo con eventos, para contrastar ambos enfoques.
 5. **Permiso de Internet en el manifiesto principal.** La plantilla de Flutter
    solo lo declara en `debug` y `profile`; sin el permiso en `main`, un APK de
    release no puede hablar con Firebase ni con una API REST.
-6. **Sin secretos.** El repositorio incluye una plantilla, no credenciales.
+6. **Configuración de Firebase.** `firebase_options.dart` contiene identificadores
+   de configuración del proyecto, no claves de administración. El archivo
    `google-services.json`, `key.properties` y los almacenes de claves están en
    `.gitignore`.
 
@@ -196,7 +213,7 @@ un Bloc completo con eventos, para contrastar ambos enfoques.
 
 | Síntoma | Causa probable | Solución |
 |---|---|---|
-| «Firebase: no configurado» | Marcadores `REEMPLAZAR_...` | Ejecutar `flutterfire configure`. |
+| «Firebase: no configurado» | Configuración ausente o plataforma no configurada | Ejecutar `flutterfire configure --platforms=android` y reiniciar la app en Android. |
 | `FirebaseException: API key not valid` | `applicationId` distinto al registrado | Registrar la app con el mismo `applicationId` y regenerar opciones. |
 | La app funciona en debug pero no en release | Falta `INTERNET` en el manifiesto principal | Verificar `android/app/src/main/AndroidManifest.xml`. |
 | `UnsupportedError` de plataforma | Se ejecutó en iOS/escritorio | La plantilla es solo Android (decisión de la unidad). |
